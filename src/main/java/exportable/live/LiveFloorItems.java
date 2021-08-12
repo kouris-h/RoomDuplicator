@@ -49,12 +49,14 @@ public class LiveFloorItems extends FloorItems {
     // {in:ObjectUpdate}{i:183318488}{i:4539}{i:5}{i:27}{i:0}{s:"0.0"}{s:"1.0E-6"}{i:0}{i:0}{s:"0"}{i:-1}{i:1}{i:11927526}
     private void onObjectUpdate(HMessage hMessage) {
         FloorItem updatedFloorItem = new FloorItem(new HFloorItem(hMessage.getPacket()));
-        this.floorItems.replaceAll(floorItem -> {
-            if(floorItem.id == updatedFloorItem.id) {
-                return updatedFloorItem;
-            }
-            return floorItem;
-        });
+        synchronized (lock) {
+            this.floorItems.replaceAll(floorItem -> {
+                if (floorItem.id == updatedFloorItem.id) {
+                    return updatedFloorItem;
+                }
+                return floorItem;
+            });
+        }
     }
 
     // {in:ObjectDataUpdate}{s:"183318488"}{i:0}{s:"3"}

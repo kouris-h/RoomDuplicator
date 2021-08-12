@@ -58,7 +58,7 @@ public class FloorPlan extends Exportable {
         progressListener.setProgress(0d);
         executor.sendToServer("UpdateFloorProperties", floorPlan, doorX, doorY, doorDir, 0, 0);
         progressListener.setProgress(0.5d);
-        executor.awaitPacket(new Executor.AwaitingPacket("GetGuestRoomResult", HMessage.Direction.TOCLIENT, 1000)
+        executor.awaitPacket(new Executor.AwaitingPacket("GetGuestRoomResult", HMessage.Direction.TOCLIENT, 15000)
                 .addConditions(HPacket::readBoolean));
         progressListener.setProgress(1d);
     }
