@@ -61,7 +61,7 @@ public class RoomDuplicator extends ExtensionForm {
     public static void main(String[] args) {
         ExtensionFormLauncher.trigger(RoomDuplicator.class, args);
     }
-    //test
+
     @Override
     public ExtensionForm launchForm(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(RoomDuplicator.class.getClassLoader().getResource("fxml/roomduplicator.fxml"));

@@ -3,9 +3,12 @@ package exportable;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
 import javafx.scene.control.Alert;
+import javafx.util.Pair;
 import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
+
+import java.util.Map;
 
 @ExportableInfo(
     Name = "Floorplan",
@@ -29,8 +32,29 @@ public class FloorPlan extends Exportable {
         this.doorDir = floorImport.getInt("doorDir");
     }
 
+    public Pair<Integer, Integer> getOpenSpot(int minSize) {
+        String[] splitFloorPlan = floorPlan.split("\r");
+        for(int y = 0; y < splitFloorPlan.length - minSize; y++) {
+            for(int x = 0; x < splitFloorPlan[y].length() - minSize; x++) {
+                if(splitFloorPlan[y].charAt(x) != 'x') {
+                    boolean possible = true;
+                    char height = splitFloorPlan[y].charAt(x);
+                    for(int i = 0; i < minSize; i++) {
+                        for(int j = 0; j < minSize; j++) {
+                            possible = splitFloorPlan[y + i].charAt(x + j) == height;
+                                if(!possible) break;
+                        }
+                        if(!possible) break;
+                    }
+                    if(possible) return new Pair<>(x, y);
+                }
+            }
+        }
+        return new Pair<>(1, 1);
+    }
+
     @Override
-    public void doImport(Executor executor, Exportable currentState, Inventory inventory, ProgressListener progressListener) {
+    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         progressListener.setProgress(0d);
         executor.sendToServer("UpdateFloorProperties", floorPlan, doorX, doorY, doorDir, 0, 0);
         progressListener.setProgress(0.5d);

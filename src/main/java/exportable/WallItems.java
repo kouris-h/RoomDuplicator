@@ -11,6 +11,7 @@ import utils.Executor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @ExportableInfo(
     Name = "Wall Items",
@@ -43,13 +44,15 @@ public class WallItems extends Exportable {
     }
 
     @Override
-    public void doImport(Executor executor, Exportable currentState, Inventory inventory, ProgressListener progressListener) {
+    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         // TODO
     }
 
-    private static class WallItem extends Exportable {
-        public final String classname, position, state;
-        public final int id, typeId;
+    protected static class WallItem extends Exportable {
+        public String classname;
+        public String position;
+        public String state;
+        public int id, typeId;
 
         public WallItem(HWallItem item) {
             this.id = item.getId();
@@ -74,7 +77,7 @@ public class WallItems extends Exportable {
         }
 
         @Override
-        public void doImport(Executor executor, Exportable currentState, Inventory inventory, ProgressListener progressListener) {
+        public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
             // TODO
         }
     }

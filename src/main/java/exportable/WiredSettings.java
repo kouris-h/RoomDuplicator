@@ -5,6 +5,8 @@ import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
 
+import java.util.Map;
+
 @ExportableInfo(
         Name = "Wired Settings",
         JsonTag = "wiredSettings"
@@ -22,7 +24,7 @@ public class WiredSettings extends Exportable {
     }
 
     @Override
-    public void doImport(Executor executor, Exportable currentState, Inventory inventory, ProgressListener progressListener) {
+    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         // TODO
     }
 }

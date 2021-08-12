@@ -25,9 +25,6 @@ public class Executor {
     }
 
     public void sendToServer(String hashOrName, Object... objects) {
-        int headerId = packetInfoManager.getPacketInfoFromName(HMessage.Direction.TOSERVER, hashOrName).getHeaderId();
-        HPacket packet = new HPacket(headerId, objects);
-        System.out.println(packet.toExpression());
         packetInfoSupport.sendToServer(hashOrName, objects);
     }
 

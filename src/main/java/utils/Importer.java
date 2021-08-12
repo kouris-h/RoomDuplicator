@@ -80,20 +80,17 @@ public class Importer {
 
     public void runImport() {
         // TODO
-        //JSONArray unstackables = new JSONArray(new JSONTokener(Objects.requireNonNull(extension.getClass().getResourceAsStream("/json/unstackable.json"))));
+
         Map<String, HPacket> packets = Utils.requestRoomEntryPackets(executor);
         if(packets.values().stream().noneMatch(Objects::nonNull) || packets.get("GetGuestRoomResult") == null || packets.get("RoomVisualizationSettings") == null) {
             extension.log(Color.RED, "Move Habbo in to a room to start an import!");
             return;
         }
 
-        List<Exportable> currentStates = Utils.getExportablesFromPackets(extension, packets);
+        Map<String, Exportable> currentStates = Utils.getLiveExportablesFromPackets(extension, packets);
         List<Exportable> exportables = getExportablesFromJson(importingJson);
 
-        new LiveFloorItems(extension, packets.get("Objects"));
-
-        if(exportables.stream().map(Exportable::getClass).anyMatch(c -> c.equals(FloorPlan.class) || c.equals(FloorItems.class))
-                && currentStates.stream().filter(e -> e.getClass().equals(FloorItems.class)).anyMatch(e -> !((FloorItems) e).floorItems.isEmpty())) {
+        if(exportables.stream().map(Exportable::getClass).anyMatch(c -> c.equals(FloorPlan.class) || c.equals(FloorItems.class))) {
             if(!Utils.requestEjectall(executor)) {
                 extension.log(Color.RED, "Ejectall rejected, import stopped!");
             }
@@ -102,7 +99,7 @@ public class Importer {
         Inventory inv = Utils.requestInventory(executor);
 
         exportables.forEach(exportable -> {
-            exportable.doImport(executor, currentStates.stream().filter(Objects::nonNull).filter(c -> c.getClass().equals(exportable.getClass())).findFirst().orElse(null), inv, (p) -> extension.importProgress.setProgress(p));
+            exportable.doImport(executor, currentStates, inv, (p) -> extension.importProgress.setProgress(p));
             extension.log(Color.SEAGREEN, exportable.getClass().getAnnotation(ExportableInfo.class).Name() + " imported!");
         });
     }

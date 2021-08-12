@@ -21,12 +21,7 @@ public class LiveFloorItems extends FloorItems {
         packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "ObjectRemove", this::onObjectRemove);
         packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::onObjectUpdate);
         packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "ObjectDataUpdate", this::onObjectDataUpdate);
-    }
-
-    private void onObjectAdd(HMessage hMessage) {
-        synchronized (lock) {
-            this.floorItems.add(new FloorItem(new HFloorItem(hMessage.getPacket())));
-        }
+        packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", this::onSlideObjectBundle);
     }
 
     private void onObjects(HMessage hMessage) {
@@ -35,6 +30,12 @@ public class LiveFloorItems extends FloorItems {
             Arrays.stream(HFloorItem.parse(hMessage.getPacket()))
                     .map(FloorItem::new)
                     .forEach(this.floorItems::add);
+        }
+    }
+
+    private void onObjectAdd(HMessage hMessage) {
+        synchronized (lock) {
+            this.floorItems.add(new FloorItem(new HFloorItem(hMessage.getPacket())));
         }
     }
 
@@ -62,7 +63,6 @@ public class LiveFloorItems extends FloorItems {
         HPacket packet = hMessage.getPacket();
         FloorItem item = getFloorItemById(Integer.parseInt(packet.readString()));
         if(item != null) {
-            System.out.println(item.state);
             switch (packet.readInteger()) {
                 case 0:
                     item.state = packet.readString();
@@ -73,6 +73,29 @@ public class LiveFloorItems extends FloorItems {
                     break;
             }
         }
+    }
+
+    // {in:SlideObjectBundle}{i:7}{i:24}{i:6}{i:24}{i:1}{i:127188621}{s:"0.0"}{s:"0.0"}{i:-1}
+    // {in:SlideObjectBundle}{i:12}{i:22}{i:12}{i:21}{i:2}{i:282751805}{s:"0.45"}{s:"0.45"}{i:282751804}{s:"0.45"}{s:"0.45"}{i:254014123}
+    private void onSlideObjectBundle(HMessage hMessage) {
+        HPacket packet = hMessage.getPacket();
+        packet.readInteger(); // oldX
+        packet.readInteger(); // oldY
+        int newX = packet.readInteger();
+        int newY = packet.readInteger();
+        int n = packet.readInteger();
+        for(int i = 0; i < n; i++) {
+            FloorItem item = getFloorItemById(packet.readInteger());
+            packet.readString(); // oldZ
+            double newZ = Double.parseDouble(packet.readString());
+            if(item != null) {
+                item.x = newX;
+                item.y = newY;
+                item.z = newZ;
+            }
+        }
+
+        // int for roller or wired id
     }
 
     public FloorItem getFloorItemById(int id) {

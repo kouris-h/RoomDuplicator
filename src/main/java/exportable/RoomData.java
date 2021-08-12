@@ -9,6 +9,8 @@ import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
 
+import java.util.Map;
+
 @ExportableInfo(
     Name = "Room Settings",
     JsonTag = "roomData"
@@ -161,9 +163,9 @@ public class RoomData extends Exportable {
     }
 
     @Override
-    public void doImport(Executor executor, Exportable currentState, Inventory inventory, ProgressListener progressListener) {
+    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         executor.sendToServer("SaveRoomSettings",
-                ((RoomData) currentState).id, name, description, lockType, password != null ? password : "",
+                ((RoomData) currentStates.get("RoomData")).id, name, description, lockType, password != null ? password : "",
                 maxUsers, category, /*tagCount*/ 0, tradingMode, allowPets, /*allowFoodConsume*/ false, /*allowWalkThrough*/ true,
                 wallsHidden, wallThickness, floorThickness, muteRights, kickRights, banRights,
                 freeflow, chatSize, scrollMethod, chatDistance, floodMode, /*showRoomByFurniInNav*/ false);
