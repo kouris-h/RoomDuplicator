@@ -54,22 +54,21 @@ public class FloorItems extends Exportable {
         this.floorItems.forEach(item -> item.fixState(executor, currentStates, inventory, progressListener));
         this.stackTiles = inventory.getStackTiles();
 
-        Pair<Integer, Integer> stackSpace = ((FloorPlan) currentStates.get("FloorPlan")).getOpenSpot(2);
-        this.stackTiles.placeAll(executor, stackSpace.getKey(), stackSpace.getValue());
-
         this.unstackables = new JSONArray(new JSONTokener(Objects.requireNonNull(this.getClass().getResourceAsStream("/json/unstackable.json")))).toList();
 
         this.floorItems.sort(Comparator.comparingInt(item -> item.x)); // Work from back to front
         this.floorItems.sort(Comparator.comparingInt(item -> item.y)); // Work from back to front
         this.floorItems.sort(Comparator.comparingDouble(item -> item.z)); // Work from bottom to top
 
-        this.floorItems.sort((a,b) -> { // Make sure unstackables come before all others
-            if(unstackables.contains(a.classname) && unstackables.contains(b.classname)) return 0;
-            if(unstackables.contains(a.classname)) return 1;
-            return -1;
-        });
+        // First place unstackables
+        this.floorItems.stream().filter(i -> unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, currentStates, inventory, progressListener));
 
-        this.floorItems.forEach(item -> item.doImport(executor, currentStates, inventory, progressListener));
+        // Place stacktiles
+        Pair<Integer, Integer> stackSpace = ((FloorPlan) currentStates.get("FloorPlan")).getOpenSpot(2);
+        this.stackTiles.placeAll(executor, stackSpace.getKey(), stackSpace.getValue());
+
+        // Place stackables
+        this.floorItems.stream().filter(i -> !unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, currentStates, inventory, progressListener));
         this.stackTiles.pickUp(executor);
     }
 
