@@ -1,6 +1,5 @@
 package exportable;
 
-import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
@@ -9,6 +8,7 @@ import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
 
+import java.util.List;
 import java.util.Map;
 
 @ExportableInfo(
@@ -163,7 +163,7 @@ public class RoomData extends Exportable {
     }
 
     @Override
-    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+    public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         executor.sendToServer("SaveRoomSettings",
                 ((RoomData) currentStates.get("RoomData")).id, name, description, lockType, password != null ? password : "",
                 maxUsers, category, /*tagCount*/ 0, tradingMode, allowPets, /*allowFoodConsume*/ false, /*allowWalkThrough*/ true,

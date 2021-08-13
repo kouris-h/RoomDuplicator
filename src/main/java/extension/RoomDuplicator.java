@@ -117,8 +117,15 @@ public class RoomDuplicator extends ExtensionForm {
 
     public void startImport(ActionEvent actionEvent) {
         importPane.setDisable(true);
-        importer.runImport();
-        importPane.setDisable(false);
+        Thread importThread = new Thread(() -> {
+            importer.runImport();
+            Platform.runLater(() -> importPane.setDisable(false));
+        });
+        importThread.setUncaughtExceptionHandler((thread, exception) -> {
+            exception.printStackTrace();
+            Platform.runLater(() -> importPane.setDisable(false));
+        });
+        importThread.start();
     }
 
     public void onSelectImportFileButton(ActionEvent actionEvent) {

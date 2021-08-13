@@ -15,13 +15,14 @@ import utils.Executor;
 import utils.Utils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @ExportableInfo(
     Name = "Floor Items",
     JsonTag = "floorItems"
 )
 public class FloorItems extends Exportable {
-    public final List<FloorItem> floorItems = new ArrayList<>();
+    public List<FloorItem> floorItems = new ArrayList<>();
     public Inventory.StackTiles stackTiles;
     public List<Object> unstackables;
 
@@ -50,7 +51,9 @@ public class FloorItems extends Exportable {
     }
 
     @Override
-    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+    public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+        this.floorItems = this.floorItems.stream().filter(item -> item.typeId > 0).collect(Collectors.toList());
+
         this.floorItems.forEach(item -> item.fixState(executor, currentStates, inventory, progressListener));
         this.stackTiles = inventory.getStackTiles();
 
@@ -61,14 +64,14 @@ public class FloorItems extends Exportable {
         this.floorItems.sort(Comparator.comparingDouble(item -> item.z)); // Work from bottom to top
 
         // First place unstackables
-        this.floorItems.stream().filter(i -> unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, currentStates, inventory, progressListener));
+        this.floorItems.stream().filter(i -> unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, importingStates, currentStates, inventory, progressListener));
 
         // Place stacktiles
         Pair<Integer, Integer> stackSpace = ((FloorPlan) currentStates.get("FloorPlan")).getOpenSpot(2);
         this.stackTiles.placeAll(executor, stackSpace.getKey(), stackSpace.getValue());
 
         // Place stackables
-        this.floorItems.stream().filter(i -> !unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, currentStates, inventory, progressListener));
+        this.floorItems.stream().filter(i -> !unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, importingStates, currentStates, inventory, progressListener));
         this.stackTiles.pickUp(executor);
     }
 
@@ -112,10 +115,12 @@ public class FloorItems extends Exportable {
 
             FurniDataSearcher.FurniDetails furniDetails = FurniDataSearcher
                     .getFurniDetailsByClassName(this.classname, FurniDataSearcher.FurniType.FLOOR);
-
-            this.typeId = furniDetails.getTypeID();
-            this.xDim = furniDetails.getXDim();
-            this.yDim = furniDetails.getYDim();
+            System.out.println(this.classname);
+            if(furniDetails != null) {
+                this.typeId = furniDetails.getTypeID();
+                this.xDim = furniDetails.getXDim();
+                this.yDim = furniDetails.getYDim();
+            }
         }
 
         public void fixState(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
@@ -127,7 +132,7 @@ public class FloorItems extends Exportable {
                 this.newId = usedItem.getItemID();
                 Pair<Integer, Integer> openSpot = currentFloorPlan.getOpenSpot(Math.max(this.xDim, this.yDim));
 
-                Utils.placeObject(executor, this.newId, openSpot.getKey(), openSpot.getValue(), this.dir);
+                Utils.placeFloorItem(executor, this.newId, openSpot.getKey(), openSpot.getValue(), this.dir);
 
                 FloorItem currentItem = currentFloorItems.getFloorItemById(this.newId);
                 if (currentItem != null) {
@@ -160,30 +165,34 @@ public class FloorItems extends Exportable {
                             && currentItem.state != null
                             && !this.state.equals(currentFloorItems.getFloorItemById(this.newId).state)) {
                         executor.sendToServer("UseFurniture", this.newId, 0);
-                        executor.awaitPacket(
-                                new Executor.AwaitingPacket("ObjectDataUpdate", HMessage.Direction.TOCLIENT, 50)
-                                        .addConditions(packet -> Integer.parseInt(packet.readString()) == this.newId),
-                                new Executor.AwaitingPacket("ObjectUpdate", HMessage.Direction.TOCLIENT, 50)
+                        executor.awaitPacketList(
+                                new Executor.AwaitingPacket("ObjectDataUpdate", HMessage.Direction.TOCLIENT, 150)
+                                        .addConditions(packet -> Integer.parseInt(packet.readString()) == this.newId)
+                                        .setMinWaitingTime(100),
+                                new Executor.AwaitingPacket("ObjectUpdate", HMessage.Direction.TOCLIENT, 150)
                                         .addConditions(packet -> packet.readInteger() == this.newId)
+                                        .setMinWaitingTime(100)
                         );
                         tries++;
                     }
                 }
 
-                while(currentFloorItems.getFloorItemById(this.newId) != null) {
+                do {
                     executor.sendToServer("PickupObject", 2, this.newId);
                     Utils.sleep(30);
-                }
+                } while(currentFloorItems.getFloorItemById(this.newId) != null);
 
                 inventory.removeItemById(this.newId);
             } else {
                 // TODO log item not found
                 System.out.println(this.classname + " skipped");
             }
+
+            progressListener.setProgress((double) floorItems.stream().filter(i -> i.newId > 0).count() / floorItems.size());
         }
 
         @Override
-        public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+        public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
             if(this.newId > 0) {
                 if(!unstackables.contains(this.classname)) {
                     if (!stackTiles.supportItem(executor, this.x, this.y, this.xDim, this.yDim, this.z)) {
@@ -191,8 +200,12 @@ public class FloorItems extends Exportable {
                         // TODO log
                     }
                 }
-                Utils.placeObject(executor, this.newId, this.x, this.y, this.dir);
+                Utils.placeFloorItem(executor, this.newId, this.x, this.y, this.dir);
             }
+
+            LiveFloorItems currentFloorItems = (LiveFloorItems) currentStates.get("FloorItems");
+
+            progressListener.setProgress((double) currentFloorItems.floorItems.size() / floorItems.stream().filter(i -> i.newId > 0).count());
         }
 
         @Override

@@ -5,6 +5,7 @@ import parsers.Inventory;
 import utils.Executor;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 public abstract class Exportable {
@@ -24,7 +25,7 @@ public abstract class Exportable {
         return jsonObject;
     }
 
-    public abstract void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener);
+    public abstract void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener);
 
     public interface ProgressListener {
         void setProgress(double p);

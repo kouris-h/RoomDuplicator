@@ -58,15 +58,17 @@ public class LiveWallItems extends WallItems {
     //{in:ItemUpdate}{s:"43942084"}{i:4685}{s:":w=0,24 l=0,36 l"}{s:"2"}{i:-1}{i:1}{i:11927526}
     private void onItemUpdate(HMessage hMessage) {
         WallItem updatedWallItem = new WallItem(new HWallItem(hMessage.getPacket()));
-        this.wallItems.replaceAll(wallItem -> {
-            if(wallItem.id == updatedWallItem.id) {
-                return updatedWallItem;
-            }
-            return wallItem;
-        });
+        synchronized (lock) {
+            this.wallItems.replaceAll(wallItem -> {
+                if (wallItem.id == updatedWallItem.id) {
+                    return updatedWallItem;
+                }
+                return wallItem;
+            });
+        }
     }
 
-    private WallItem getWallItemById(int id) {
+    public WallItem getWallItemById(int id) {
         synchronized (lock) {
             return this.wallItems.stream().filter(wallItem -> wallItem.id == id).findAny().orElse(null);
         }

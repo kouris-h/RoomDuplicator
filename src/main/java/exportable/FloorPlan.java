@@ -2,12 +2,12 @@ package exportable;
 
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
-import javafx.scene.control.Alert;
 import javafx.util.Pair;
 import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
 
+import java.util.List;
 import java.util.Map;
 
 @ExportableInfo(
@@ -15,8 +15,10 @@ import java.util.Map;
     JsonTag = "floorPlan"
 )
 public class FloorPlan extends Exportable {
-    public final String floorPlan;
-    public final int doorX, doorY, doorDir;
+    public String floorPlan;
+    public int doorX;
+    public int doorY;
+    public int doorDir;
 
     public FloorPlan(HPacket floorPlanPacket, HPacket doorPacket) {
         this.floorPlan = floorPlanPacket.readString(11);
@@ -54,7 +56,7 @@ public class FloorPlan extends Exportable {
     }
 
     @Override
-    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+    public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         progressListener.setProgress(0d);
         executor.sendToServer("UpdateFloorProperties", floorPlan, doorX, doorY, doorDir, 0, 0);
         progressListener.setProgress(0.5d);

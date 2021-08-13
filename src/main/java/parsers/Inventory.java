@@ -166,7 +166,7 @@ public class Inventory {
         }
 
         public void placeAll(Executor executor, int x, int y) {
-            usedTiles.keySet().forEach(tile -> Utils.placeObject(executor, tile.itemID, x, y, 0));
+            usedTiles.keySet().forEach(tile -> Utils.placeFloorItem(executor, tile.itemID, x, y, 0));
         }
 
         public boolean supportItem(Executor executor, int x, int y, int xDim, int yDim, double z) {
@@ -218,6 +218,7 @@ public class Inventory {
                 }
             }
             setHeight(executor, (int) Math.floor(z * 100));
+            Utils.sleep(50);
             return fullyCovered;
         }
     }

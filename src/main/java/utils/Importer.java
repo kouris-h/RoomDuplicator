@@ -1,7 +1,6 @@
 package utils;
 
 import exportable.*;
-import exportable.live.LiveFloorItems;
 import extension.RoomDuplicator;
 import gearth.misc.Cacher;
 import gearth.protocol.HPacket;
@@ -15,10 +14,7 @@ import parsers.Inventory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class Importer {
     private final RoomDuplicator extension;
@@ -93,13 +89,14 @@ public class Importer {
         if(exportables.stream().map(Exportable::getClass).anyMatch(c -> c.equals(FloorPlan.class) || c.equals(FloorItems.class))) {
             if(!Utils.requestEjectall(executor)) {
                 extension.log(Color.RED, "Ejectall rejected, import stopped!");
+                return;
             }
         }
 
         Inventory inv = Utils.requestInventory(executor);
 
         exportables.forEach(exportable -> {
-            exportable.doImport(executor, currentStates, inv, (p) -> extension.importProgress.setProgress(p));
+            exportable.doImport(executor, exportables, currentStates, inv, (p) -> extension.importProgress.setProgress(p));
             extension.log(Color.SEAGREEN, exportable.getClass().getAnnotation(ExportableInfo.class).Name() + " imported!");
         });
     }

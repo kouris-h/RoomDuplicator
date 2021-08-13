@@ -1,12 +1,15 @@
 package exportable;
 
+import exportable.live.LiveWallItems;
 import furnidata.FurniDataSearcher;
 import gearth.extensions.parsers.HWallItem;
+import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
+import utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,7 +21,7 @@ import java.util.Map;
     JsonTag = "wallItems"
 )
 public class WallItems extends Exportable {
-    public final List<WallItem> wallItems = new ArrayList<>();
+    public List<WallItem> wallItems = new ArrayList<>();
 
     public WallItems(HPacket objectsPacket) {
         Arrays.stream(HWallItem.parse(objectsPacket))
@@ -44,11 +47,13 @@ public class WallItems extends Exportable {
     }
 
     @Override
-    public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
-        // TODO
+    public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+        this.wallItems.stream()
+                .filter(item -> item.typeId > 0)
+                .forEach(item -> item.doImport(executor, importingStates, currentStates, inventory, progressListener));
     }
 
-    protected static class WallItem extends Exportable {
+    protected class WallItem extends Exportable {
         public String classname;
         public String position;
         public String state;
@@ -71,14 +76,49 @@ public class WallItems extends Exportable {
             this.position = wallItemImport.getString("position");
             this.state = wallItemImport.getString("state");
 
-            this.typeId = FurniDataSearcher
-                    .getFurniDetailsByClassName(this.classname, FurniDataSearcher.FurniType.WALL)
-                    .getTypeID();
+            FurniDataSearcher.FurniDetails furniDetails =  FurniDataSearcher
+                    .getFurniDetailsByClassName(this.classname, FurniDataSearcher.FurniType.WALL);
+            if(furniDetails != null) {
+                this.typeId = furniDetails.getTypeID();
+            }
         }
 
         @Override
-        public void doImport(Executor executor, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
-            // TODO
+        public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+            LiveWallItems currentWallItems = (LiveWallItems) currentStates.get("WallItems");
+
+            Inventory.InvItem usedItem = inventory.getItemByTypeId(this.typeId, FurniDataSearcher.FurniType.WALL);
+            if(usedItem != null) {
+                Utils.placeWallItem(executor, usedItem.getItemID(), this.position);
+                Utils.sleep(30);
+                if(currentWallItems.getWallItemById(usedItem.getItemID()) != null) {
+                    int tries = 0;
+                    while (tries < 50
+                            && this.state != null
+                            && currentWallItems.getWallItemById(usedItem.getItemID()).state != null
+                            && !this.state.equals(currentWallItems.getWallItemById(usedItem.getItemID()).state)) {
+                        // {out:UseWallItem}{i:23211828}{i:0}
+                        executor.sendToServer("UseWallItem", usedItem.getItemID(), 0);
+                        // {in:ItemUpdate}{s:"23211828"}{i:4374}{s:":w=0,22 l=4,26 l"}{s:"0"}{i:-1}{i:1}{i:11927526}
+                        executor.awaitPacket(
+                                new Executor.AwaitingPacket("ItemUpdate", HMessage.Direction.TOCLIENT, 50)
+                                        .addConditions(packet -> Integer.parseInt(packet.readString()) == usedItem.getItemID())
+                                        .setMinWaitingTime(30)
+                        );
+                        tries++;
+                    }
+                } else {
+                    System.out.println("Failed to place " + classname);
+                    // TODO log
+                }
+
+                inventory.removeItemById(usedItem.getItemID());
+            } else {
+                // TODO log item not found
+                System.out.println(this.classname + " skipped");
+            }
+
+            progressListener.setProgress((double) currentWallItems.wallItems.size() / wallItems.size());
         }
     }
 }

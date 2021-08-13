@@ -2,17 +2,23 @@ package utils;
 
 import exportable.*;
 import exportable.live.LiveFloorItems;
+import exportable.live.LiveFloorPlan;
 import exportable.live.LiveWallItems;
 import extension.RoomDuplicator;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.stage.StageStyle;
-import javafx.util.Pair;
 import parsers.Inventory;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Utils {
     public static Map<String, HPacket> requestRoomEntryPackets(Executor executor) {
@@ -41,7 +47,7 @@ public class Utils {
 
         if(packetMap.getOrDefault("RoomEntryTile", null) != null
                 && packetMap.getOrDefault("FloorHeightMap", null) != null) {
-            exportables.put("FloorPlan", new FloorPlan(packetMap.get("FloorHeightMap"), packetMap.get("RoomEntryTile")));
+            exportables.put("FloorPlan", new LiveFloorPlan(extension, packetMap.get("FloorHeightMap"), packetMap.get("RoomEntryTile")));
         }
 
         if(packetMap.getOrDefault("GetGuestRoomResult", null) != null) {
@@ -60,16 +66,35 @@ public class Utils {
     }
 
     public static boolean requestEjectall(Executor executor) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Ejectall confirmation");
-        alert.setHeaderText("Importing floorplan and/or floor items requires an ejectall");
-        alert.setContentText("Do you want to ejectall and continue with the import?");
-        alert.initStyle(StageStyle.UNDECORATED);
+        final FutureTask<Boolean> alertDialog = new FutureTask<>(() -> {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Ejectall confirmation");
+            alert.setHeaderText("Importing floorplan and/or floor items requires an ejectall");
+            alert.setContentText("Do you want to ejectall and continue with the import?");
+            alert.initStyle(StageStyle.UNDECORATED);
 
-        if(alert.showAndWait().get() == ButtonType.OK) {
-            executor.sendToServer("Chat", ":ejectall", 0, -1);
-            executor.awaitPacket(new Executor.AwaitingPacket("ObjectRemove", HMessage.Direction.TOCLIENT, 1000));
-            return true;
+            AtomicBoolean result = new AtomicBoolean(false);
+            final Button ok = (Button) alert.getDialogPane().lookupButton(ButtonType.OK);
+            ok.addEventFilter(ActionEvent.ACTION, event -> result.set(true));
+
+            final Button cancel = (Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL);
+            cancel.addEventFilter(ActionEvent.ACTION, event -> result.set(false));
+
+            alert.showAndWait();
+
+            return result.get();
+        });
+
+        Platform.runLater(alertDialog);
+
+        try {
+            if(alertDialog.get()) {
+                executor.sendToServer("Chat", ":ejectall", 0, -1);
+                executor.awaitPacket(new Executor.AwaitingPacket("ObjectRemove", HMessage.Direction.TOCLIENT, 1000));
+                return true;
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
         return false;
     }
@@ -110,7 +135,7 @@ public class Utils {
         }
     }
 
-    public static void placeObject(Executor executor, int id, int x, int y, int dir) {
+    public static void placeFloorItem(Executor executor, int id, int x, int y, int dir) {
         int tries = 0;
         String floorString = String.format("-%d %d %d %d", id, x, y, dir);
         while(tries < 10) {
@@ -128,6 +153,18 @@ public class Utils {
             executor.sendToServer("MoveObject", id, x, y, dir);
             HPacket response = executor.awaitPacket(new Executor.AwaitingPacket("ObjectUpdate", HMessage.Direction.TOCLIENT, 50)
                     .addConditions(p -> p.readInteger() == id));
+            if(response != null) return;
+            tries++;
+        }
+    }
+
+    public static void placeWallItem(Executor executor, int id, String position) {
+        int tries = 0;
+        String wallString = String.format("%d %s", id, position);
+        while(tries < 10) {
+            executor.sendToServer("PlaceObject", wallString);
+            HPacket response = executor.awaitPacket(new Executor.AwaitingPacket("ItemAdd", HMessage.Direction.TOCLIENT, 50)
+                    .addConditions(p -> Integer.parseInt(p.readString()) == id));
             if(response != null) return;
             tries++;
         }
