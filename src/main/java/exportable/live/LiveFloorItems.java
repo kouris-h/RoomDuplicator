@@ -27,6 +27,7 @@ public class LiveFloorItems extends FloorItems {
             this.floorItems.clear();
             HPacket packet = hMessage.getPacket();
             packet.resetReadIndex();
+            System.out.println(packet.toExpression());
             Arrays.stream(HFloorItem.parse(packet))
                     .map(FloorItem::new)
                     .forEach(this.floorItems::add);
@@ -47,6 +48,7 @@ public class LiveFloorItems extends FloorItems {
         synchronized (lock) {
             HPacket packet = hMessage.getPacket();
             packet.resetReadIndex();
+            System.out.println(packet.toExpression());
             this.floorItems.remove(getFloorItemById(Integer.parseInt(packet.readString())));
         }
     }
@@ -55,6 +57,7 @@ public class LiveFloorItems extends FloorItems {
     private void onObjectUpdate(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.resetReadIndex();
+        System.out.println(packet.toExpression());
         FloorItem updatedFloorItem = new FloorItem(new HFloorItem(packet));
         synchronized (lock) {
             this.floorItems.replaceAll(floorItem -> {
@@ -71,6 +74,7 @@ public class LiveFloorItems extends FloorItems {
     private void onObjectDataUpdate(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.resetReadIndex();
+        System.out.println(packet.toExpression());
         FloorItem item = getFloorItemById(Integer.parseInt(packet.readString()));
         if(item != null) {
             switch (packet.readInteger()) {
@@ -90,6 +94,7 @@ public class LiveFloorItems extends FloorItems {
     private void onSlideObjectBundle(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.resetReadIndex();
+        System.out.println(packet.toExpression());
         packet.readInteger(); // oldX
         packet.readInteger(); // oldY
         int newX = packet.readInteger();

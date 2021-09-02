@@ -16,6 +16,7 @@ public class LiveFloorPlan extends FloorPlan {
     private void onRoomEntryTile(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.resetReadIndex();
+        System.out.println(packet.toExpression());
         this.doorX = packet.readInteger(6);
         this.doorY = packet.readInteger(10);
         this.doorDir = packet.readInteger(14);
@@ -24,6 +25,7 @@ public class LiveFloorPlan extends FloorPlan {
     private void onFloorHeightMap(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.resetReadIndex();
+        System.out.println(packet.toExpression());
         this.floorPlan = packet.readString(11);
     }
 }

@@ -26,6 +26,7 @@ public class LiveWallItems extends WallItems {
             this.wallItems.clear();
             HPacket packet = hMessage.getPacket();
             packet.resetReadIndex();
+            System.out.println(packet.toExpression());
             Arrays.stream(HWallItem.parse(packet))
                     .map(WallItems.WallItem::new)
                     .forEach(this.wallItems::add);
@@ -37,6 +38,7 @@ public class LiveWallItems extends WallItems {
         synchronized (lock) {
             HPacket packet = hMessage.getPacket();
             packet.resetReadIndex();
+            System.out.println(packet.toExpression());
             this.wallItems.add(new WallItems.WallItem(new HWallItem(packet)));
         }
     }
@@ -44,7 +46,10 @@ public class LiveWallItems extends WallItems {
     //{in:ItemRemove}{s:"43942084"}{i:11927526}
     private void onItemRemove(HMessage hMessage) {
         synchronized (lock) {
-            this.wallItems.remove(getWallItemById(Integer.parseInt(hMessage.getPacket().readString())));
+            HPacket packet = hMessage.getPacket();
+            packet.resetReadIndex();
+            System.out.println(packet.toExpression());
+            this.wallItems.remove(getWallItemById(Integer.parseInt(packet.readString())));
         }
     }
 
@@ -52,6 +57,7 @@ public class LiveWallItems extends WallItems {
     private void onMoveWallItem(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.resetReadIndex();
+        System.out.println(packet.toExpression());
         WallItems.WallItem item = getWallItemById(Integer.parseInt(packet.readString()));
         if(item != null) {
             item.position = packet.readString();
@@ -62,6 +68,7 @@ public class LiveWallItems extends WallItems {
     private void onItemUpdate(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.resetReadIndex();
+        System.out.println(packet.toExpression());
         WallItem updatedWallItem = new WallItem(new HWallItem(packet));
         synchronized (lock) {
             this.wallItems.replaceAll(wallItem -> {

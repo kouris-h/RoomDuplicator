@@ -160,7 +160,7 @@ public class Inventory {
         public void pickUp(Executor executor) {
             usedTiles.keySet().forEach(tile -> {
                 executor.sendToServer("PickupObject", 2, tile.getItemID());
-                Utils.sleep(30);
+                Utils.sleep(50);
             });
         }
 
