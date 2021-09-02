@@ -3,10 +3,12 @@ package exportable;
 import gearth.protocol.HPacket;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
+import javafx.scene.paint.Color;
 import javafx.stage.StageStyle;
 import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
+import utils.Logger;
 
 import java.util.List;
 import java.util.Map;
@@ -164,6 +166,7 @@ public class RoomData extends Exportable {
 
     @Override
     public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
+        Logger.log(Color.TEAL, "Update room settings");
         executor.sendToServer("SaveRoomSettings",
                 ((RoomData) currentStates.get("RoomData")).id, name, description, lockType, password != null ? password : "",
                 maxUsers, category, /*tagCount*/ 0, tradingMode, allowPets, /*allowFoodConsume*/ false, /*allowWalkThrough*/ true,

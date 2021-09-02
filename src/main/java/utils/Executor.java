@@ -1,7 +1,6 @@
 package utils;
 
 import gearth.extensions.ExtensionBase;
-import gearth.extensions.extra.tools.PacketInfoSupport;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
 import gearth.services.packet_info.PacketInfo;
@@ -12,24 +11,24 @@ import java.util.stream.Collectors;
 
 public class Executor {
     private final PacketInfoManager packetInfoManager;
-    private final PacketInfoSupport packetInfoSupport;
+    private final ExtensionBase extension;
     private final List<AwaitingPacket> awaitingPackets = new ArrayList<>();
     private final Object lock = new Object();
 
     public Executor(ExtensionBase extension) {
         packetInfoManager = extension.getPacketInfoManager();
-        packetInfoSupport = new PacketInfoSupport(extension);
+        this.extension = extension;
 
         extension.intercept(HMessage.Direction.TOSERVER, this::onMessageToServer);
         extension.intercept(HMessage.Direction.TOCLIENT, this::onMessageToClient);
     }
 
     public void sendToServer(String hashOrName, Object... objects) {
-        packetInfoSupport.sendToServer(hashOrName, objects);
+        extension.sendToServer(new HPacket(hashOrName, HMessage.Direction.TOSERVER, objects));
     }
 
     public void sendToClient(String hashOrName, Object... objects) {
-        packetInfoSupport.sendToClient(hashOrName, objects);
+        extension.sendToClient(new HPacket(hashOrName, HMessage.Direction.TOCLIENT, objects));
     }
 
     private void onMessageToServer(HMessage hMessage) {

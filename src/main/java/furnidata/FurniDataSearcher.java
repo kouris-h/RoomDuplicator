@@ -66,7 +66,7 @@ public class FurniDataSearcher {
             case "game-es.habbo.com":
                 return "https://www.habbo.es/gamedata/furnidata_json/1";
             case "game-it.habbo.com":
-                return "https://www.habboit/gamedata/furnidata_json/1";
+                return "https://www.habbo.it/gamedata/furnidata_json/1";
             case "game-s2.habbo.com":
                 return "https://sandbox.habbo.com/gamedata/furnidata_json/1";
             default:

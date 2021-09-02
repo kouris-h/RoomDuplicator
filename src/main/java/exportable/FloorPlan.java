@@ -2,10 +2,12 @@ package exportable;
 
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
+import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
+import utils.Logger;
 
 import java.util.List;
 import java.util.Map;
@@ -58,6 +60,7 @@ public class FloorPlan extends Exportable {
     @Override
     public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         progressListener.setProgress(0d);
+        Logger.log(Color.TEAL, "Updating floorplan");
         executor.sendToServer("UpdateFloorProperties", floorPlan, doorX, doorY, doorDir, 0, 0);
         progressListener.setProgress(0.5d);
         executor.awaitPacket(new Executor.AwaitingPacket("GetGuestRoomResult", HMessage.Direction.TOCLIENT, 15000)

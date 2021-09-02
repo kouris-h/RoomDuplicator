@@ -3,7 +3,6 @@ package parsers;
 import exportable.Exportable.ProgressListener;
 import furnidata.FurniDataSearcher;
 import furnidata.FurniDataSearcher.FurniType;
-import gearth.extensions.extra.tools.PacketInfoSupport;
 import gearth.extensions.parsers.HStuff;
 import gearth.protocol.HPacket;
 import utils.Executor;
@@ -72,7 +71,7 @@ public class Inventory {
         private final int itemID, typeID, category;
         private final Object[] stuffData;
 
-        private final boolean is_groupable, is_tradeable, market_place_allowed, has_rent_period_started;
+        private final boolean recyclable, tradeable, groupable, sellable, rentPeriodStarted;
         private final int seconds_to_expiration, room_Id;
 
         private String slotID;
@@ -92,12 +91,12 @@ public class Inventory {
 
             stuffData = HStuff.readData(packet, category);
 
-            is_groupable = packet.readBoolean();
-            is_tradeable = packet.readBoolean();
-            packet.readBoolean();
-            market_place_allowed = packet.readBoolean();
+            recyclable = packet.readBoolean();
+            tradeable = packet.readBoolean();
+            groupable = packet.readBoolean();
+            sellable = packet.readBoolean();
             seconds_to_expiration = packet.readInteger();
-            has_rent_period_started = packet.readBoolean();
+            rentPeriodStarted = packet.readBoolean();
             room_Id = packet.readInteger();
 
             if (this.furniType == FurniType.FLOOR) {

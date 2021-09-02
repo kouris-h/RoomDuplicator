@@ -2,7 +2,6 @@ package utils;
 
 import exportable.*;
 import extension.RoomDuplicator;
-import gearth.misc.Cacher;
 import gearth.protocol.HPacket;
 import javafx.scene.paint.Color;
 import org.json.JSONObject;
@@ -22,11 +21,11 @@ public class Exporter {
     }
 
     public void runExport() {
-        extension.log(Cacher.getCacheDir());
+        Logger.log(Cacher.dir);
         Map<String, HPacket> packets = Utils.requestRoomEntryPackets(executor);
         System.out.println(packets.toString());
         if(packets.values().stream().noneMatch(Objects::nonNull) || packets.get("GetGuestRoomResult") == null || packets.get("RoomVisualizationSettings") == null) {
-            extension.log(Color.RED, "Move Habbo in to a room to start an export!");
+            Logger.log(Color.RED, "Move Habbo in to a room to start an export!");
             return;
         }
 
@@ -35,17 +34,16 @@ public class Exporter {
         JSONObject exportingJson = new JSONObject();
 
         exportables.forEach(exportable -> {
-                    extension.log(Color.TEAL, "Exporting " + exportable.getClass().getAnnotation(ExportableInfo.class).Name());
-                    exportingJson.put(exportable.getClass().getAnnotation(ExportableInfo.class).JsonTag(), exportable.export(progress
-                            -> extension.exportProgress.setProgress(progress)));
+                    Logger.log(Color.TEAL, "Exporting " + exportable.getClass().getAnnotation(ExportableInfo.class).Name());
+                    exportingJson.put(exportable.getClass().getAnnotation(ExportableInfo.class).JsonTag(), exportable.export(this::setProgress));
                 });
 
         HPacket roomResult = packets.get("GetGuestRoomResult");
         HPacket visualization = packets.get("RoomVisualizationSettings");
         RoomData room = new RoomData(roomResult, visualization);
 
-        Cacher.updateCache(exportingJson.toString(4), "RoomDuplicator/" + room.id + "-" + room.name.replaceAll("[^A-Za-z0-9]", "") + ".roomJson");
-        extension.log("Export completed");
+        Cacher.updateCache(exportingJson.toString(4), room.id + "-" + room.name.replaceAll("[^A-Za-z0-9]", "") + ".roomJson");
+        Logger.log("Export completed");
     }
 
     private List<Exportable> getSelectedExportablesFromPackets(Map<String, HPacket> packetMap) {
@@ -56,7 +54,7 @@ public class Exporter {
                     && packetMap.getOrDefault("FloorHeightMap", null) != null) {
                 exportables.add(new FloorPlan(packetMap.get("FloorHeightMap"), packetMap.get("RoomEntryTile")));
             } else {
-                extension.log(Color.RED, "Couldn't receive packets necessary for floorplan export, floorplan skipped!");
+                Logger.log(Color.RED, "Couldn't receive packets necessary for floorplan export, floorplan skipped!");
             }
         }
 
@@ -64,7 +62,7 @@ public class Exporter {
             if(packetMap.getOrDefault("GetGuestRoomResult", null) != null) {
                 exportables.add(new RoomData(packetMap.get("GetGuestRoomResult"), packetMap.get("RoomVisualizationSettings")));
             } else {
-                extension.log(Color.RED, "Couldn't receive packets necessary for room settings export, room settings skipped!");
+                Logger.log(Color.RED, "Couldn't receive packets necessary for room settings export, room settings skipped!");
             }
         }
 
@@ -72,7 +70,7 @@ public class Exporter {
             if(packetMap.getOrDefault("Items", null) != null) {
                 exportables.add(new WallItems(packetMap.get("Items")));
             } else {
-                extension.log(Color.RED, "Couldn't receive packets necessary for wall items export, wall items skipped!");
+                Logger.log(Color.RED, "Couldn't receive packets necessary for wall items export, wall items skipped!");
             }
         }
 
@@ -80,10 +78,14 @@ public class Exporter {
             if(packetMap.getOrDefault("Objects", null) != null) {
                 exportables.add(new FloorItems(packetMap.get("Objects")));
             } else {
-                extension.log(Color.RED, "Couldn't receive packets necessary for floor items export, floor items skipped!");
+                Logger.log(Color.RED, "Couldn't receive packets necessary for floor items export, floor items skipped!");
             }
         }
 
         return exportables;
+    }
+
+    public void setProgress(double p) {
+        this.extension.exportProgress.setProgress(p);
     }
 }

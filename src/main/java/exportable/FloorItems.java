@@ -6,12 +6,14 @@ import gearth.extensions.parsers.HFloorItem;
 import gearth.extensions.parsers.HPoint;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
+import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import parsers.Inventory;
 import utils.Executor;
+import utils.Logger;
 import utils.Utils;
 
 import java.util.*;
@@ -53,7 +55,7 @@ public class FloorItems extends Exportable {
     @Override
     public void doImport(Executor executor, List<Exportable> importingStates, Map<String, Exportable> currentStates, Inventory inventory, ProgressListener progressListener) {
         this.floorItems = this.floorItems.stream().filter(item -> item.typeId > 0).collect(Collectors.toList());
-
+        Logger.log(Color.TEAL, "Presetting flooritem states");
         this.floorItems.forEach(item -> item.fixState(executor, currentStates, inventory, progressListener));
         this.stackTiles = inventory.getStackTiles();
 
@@ -62,14 +64,14 @@ public class FloorItems extends Exportable {
         this.floorItems.sort(Comparator.comparingInt(item -> item.x)); // Work from back to front
         this.floorItems.sort(Comparator.comparingInt(item -> item.y)); // Work from back to front
         this.floorItems.sort(Comparator.comparingDouble(item -> item.z)); // Work from bottom to top
-
+        Logger.log(Color.TEAL, "Placing unstackable flooritems");
         // First place unstackables
         this.floorItems.stream().filter(i -> unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, importingStates, currentStates, inventory, progressListener));
-
+        Logger.log(Color.TEAL, "Placing stacktiles");
         // Place stacktiles
         Pair<Integer, Integer> stackSpace = ((FloorPlan) currentStates.get("FloorPlan")).getOpenSpot(2);
         this.stackTiles.placeAll(executor, stackSpace.getKey(), stackSpace.getValue());
-
+        Logger.log(Color.TEAL, "Placing flooritems");
         // Place stackables
         this.floorItems.stream().filter(i -> !unstackables.contains(i.classname)).forEach(item -> item.doImport(executor, importingStates, currentStates, inventory, progressListener));
         this.stackTiles.pickUp(executor);
@@ -115,7 +117,6 @@ public class FloorItems extends Exportable {
 
             FurniDataSearcher.FurniDetails furniDetails = FurniDataSearcher
                     .getFurniDetailsByClassName(this.classname, FurniDataSearcher.FurniType.FLOOR);
-            System.out.println(this.classname);
             if(furniDetails != null) {
                 this.typeId = furniDetails.getTypeID();
                 this.xDim = furniDetails.getXDim();
@@ -161,7 +162,7 @@ public class FloorItems extends Exportable {
 
                     tries = 0;
                     while(tries < 50
-                            && this.state != null
+                            && this.state != null && !this.state.isEmpty()
                             && currentItem.state != null
                             && !this.state.equals(currentFloorItems.getFloorItemById(this.newId).state)) {
                         executor.sendToServer("UseFurniture", this.newId, 0);
@@ -184,11 +185,10 @@ public class FloorItems extends Exportable {
 
                 inventory.removeItemById(this.newId);
             } else {
-                // TODO log item not found
-                System.out.println(this.classname + " skipped");
+                Logger.log(Color.RED, this.classname + " not found, skipped!");
             }
 
-            progressListener.setProgress((double) floorItems.stream().filter(i -> i.newId > 0).count() / floorItems.size());
+            progressListener.setProgress((double) (floorItems.stream().filter(i -> i.newId > 0).count() + 1) / floorItems.size());
         }
 
         @Override
@@ -196,8 +196,7 @@ public class FloorItems extends Exportable {
             if(this.newId > 0) {
                 if(!unstackables.contains(this.classname)) {
                     if (!stackTiles.supportItem(executor, this.x, this.y, this.xDim, this.yDim, this.z)) {
-                        System.out.println("Object not fully supported by stacktiles might not be placed");
-                        // TODO log
+                        Logger.log(Color.ORANGE, "Object not fully supported by stacktiles might not be placed");
                     }
                 }
                 Utils.placeFloorItem(executor, this.newId, this.x, this.y, this.dir);
@@ -205,7 +204,7 @@ public class FloorItems extends Exportable {
 
             LiveFloorItems currentFloorItems = (LiveFloorItems) currentStates.get("FloorItems");
 
-            progressListener.setProgress((double) currentFloorItems.floorItems.size() / floorItems.stream().filter(i -> i.newId > 0).count());
+            progressListener.setProgress((double) (currentFloorItems.floorItems.size() + 1) / floorItems.stream().filter(i -> i.newId > 0).count());
         }
 
         @Override

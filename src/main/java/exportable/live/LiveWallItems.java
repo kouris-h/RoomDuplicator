@@ -2,7 +2,6 @@ package exportable.live;
 
 import exportable.WallItems;
 import gearth.extensions.ExtensionBase;
-import gearth.extensions.extra.tools.PacketInfoSupport;
 import gearth.extensions.parsers.HWallItem;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
@@ -14,19 +13,20 @@ public class LiveWallItems extends WallItems {
 
     public LiveWallItems(ExtensionBase extension, HPacket objectsPacket) {
         super(objectsPacket);
-        PacketInfoSupport packetInfoSupport = new PacketInfoSupport(extension);
 
-        packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "Items", this::onItems);
-        packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "ItemAdd", this::onItemAdd);
-        packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "ItemRemove", this::onItemRemove);
-        packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "MoveWallItem", this::onMoveWallItem);
-        packetInfoSupport.intercept(HMessage.Direction.TOCLIENT, "ItemUpdate", this::onItemUpdate);
+        extension.intercept(HMessage.Direction.TOCLIENT, "Items", this::onItems);
+        extension.intercept(HMessage.Direction.TOCLIENT, "ItemAdd", this::onItemAdd);
+        extension.intercept(HMessage.Direction.TOCLIENT, "ItemRemove", this::onItemRemove);
+        extension.intercept(HMessage.Direction.TOCLIENT, "MoveWallItem", this::onMoveWallItem);
+        extension.intercept(HMessage.Direction.TOCLIENT, "ItemUpdate", this::onItemUpdate);
     }
 
     private void onItems(HMessage hMessage) {
         synchronized (lock) {
             this.wallItems.clear();
-            Arrays.stream(HWallItem.parse(hMessage.getPacket()))
+            HPacket packet = hMessage.getPacket();
+            packet.resetReadIndex();
+            Arrays.stream(HWallItem.parse(packet))
                     .map(WallItems.WallItem::new)
                     .forEach(this.wallItems::add);
         }
@@ -35,7 +35,9 @@ public class LiveWallItems extends WallItems {
     // {in:ItemAdd}{s:"43942084"}{i:4685}{s:":w=0,26 l=12,32 l"}{s:"1"}{i:-1}{i:1}{i:11927526}{s:"WiredSpast"}
     private void onItemAdd(HMessage hMessage) {
         synchronized (lock) {
-            this.wallItems.add(new WallItems.WallItem(new HWallItem(hMessage.getPacket())));
+            HPacket packet = hMessage.getPacket();
+            packet.resetReadIndex();
+            this.wallItems.add(new WallItems.WallItem(new HWallItem(packet)));
         }
     }
 
@@ -49,6 +51,7 @@ public class LiveWallItems extends WallItems {
     //{out:MoveWallItem}{i:43942084}{s:":w=0,24 l=0,36 l"}
     private void onMoveWallItem(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
+        packet.resetReadIndex();
         WallItems.WallItem item = getWallItemById(Integer.parseInt(packet.readString()));
         if(item != null) {
             item.position = packet.readString();
@@ -57,7 +60,9 @@ public class LiveWallItems extends WallItems {
 
     //{in:ItemUpdate}{s:"43942084"}{i:4685}{s:":w=0,24 l=0,36 l"}{s:"2"}{i:-1}{i:1}{i:11927526}
     private void onItemUpdate(HMessage hMessage) {
-        WallItem updatedWallItem = new WallItem(new HWallItem(hMessage.getPacket()));
+        HPacket packet = hMessage.getPacket();
+        packet.resetReadIndex();
+        WallItem updatedWallItem = new WallItem(new HWallItem(packet));
         synchronized (lock) {
             this.wallItems.replaceAll(wallItem -> {
                 if (wallItem.id == updatedWallItem.id) {

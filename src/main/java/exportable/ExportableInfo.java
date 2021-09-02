@@ -6,6 +6,5 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExportableInfo {
     String Name();
-
     String JsonTag();
 }

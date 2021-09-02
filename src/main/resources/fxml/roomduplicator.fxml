@@ -5,76 +5,54 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane fx:id="mainPane" prefHeight="358.0" prefWidth="636.0" xmlns="http://javafx.com/javafx/8.0.231"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="extension.RoomDuplicator" disable="true">
-    <AnchorPane fx:id="exportPane" layoutX="15.0" layoutY="31.0" prefHeight="166.0" prefWidth="296.0"
-                style="-fx-border-color: #888888; -fx-border-radius: 5px;" AnchorPane.leftAnchor="15.0"
-                AnchorPane.topAnchor="25.0">
-        <ProgressBar fx:id="exportProgress" layoutX="15.0" layoutY="132.0" prefHeight="18.0" prefWidth="181.0"
-                     progress="0.0" AnchorPane.leftAnchor="14.0"/>
+<AnchorPane fx:id="mainPane" disable="true" prefHeight="358.0" prefWidth="636.0" xmlns="http://javafx.com/javafx/8.0.271" xmlns:fx="http://javafx.com/fxml/1" fx:controller="extension.RoomDuplicator">
+    <AnchorPane fx:id="exportPane" layoutX="15.0" layoutY="31.0" prefHeight="166.0" prefWidth="296.0" style="-fx-border-color: #888888; -fx-border-radius: 5px;" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="25.0">
+        <ProgressBar fx:id="exportProgress" layoutX="15.0" layoutY="132.0" prefHeight="18.0" prefWidth="181.0" progress="0.0" AnchorPane.leftAnchor="14.0" />
         <VBox layoutX="11.0" layoutY="10.0" prefWidth="264.0" spacing="3.0">
-            <RadioButton fx:id="exportWallItems" mnemonicParsing="false" text="Export wall items"/>
-            <RadioButton fx:id="exportFloorItems" mnemonicParsing="false" text="Export floor items"/>
-            <RadioButton fx:id="exportFloorplan" layoutX="10.0" layoutY="10.0" mnemonicParsing="false"
-                         text="Export floorplan"/>
-            <RadioButton fx:id="exportRoomSettings" layoutX="10.0" layoutY="10.0" mnemonicParsing="false"
-                         text="Export room settings"/>
-            <RadioButton fx:id="exportWiredSettings" layoutX="10.0" layoutY="32.0" mnemonicParsing="false"
-                         text="Export wired settings (requires admin rights)"/>
+            <RadioButton fx:id="exportWallItems" mnemonicParsing="false" text="Export wall items" />
+            <RadioButton fx:id="exportFloorItems" mnemonicParsing="false" text="Export floor items" />
+            <RadioButton fx:id="exportFloorplan" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="Export floorplan" />
+            <RadioButton fx:id="exportRoomSettings" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="Export room settings" />
         </VBox>
-        <Button fx:id="exportButton" layoutX="209.0" layoutY="128.0" mnemonicParsing="false" prefWidth="75.0"
-                onAction="#startExport" text="Export"/>
+        <Button fx:id="exportButton" layoutX="209.0" layoutY="128.0" mnemonicParsing="false" onAction="#startExport" prefWidth="75.0" text="Export" />
     </AnchorPane>
     <Label layoutX="15.0" layoutY="8.0" text="  Export" AnchorPane.leftAnchor="14.0">
         <font>
-            <Font name="System Italic" size="12.0"/>
+            <Font name="System Italic" size="12.0" />
         </font>
     </Label>
-    <AnchorPane fx:id="importPane" layoutX="325.0" layoutY="25.0" prefHeight="166.0" prefWidth="296.0"
-                style="-fx-border-color: #888888; -fx-border-radius: 5px;">
-        <ProgressBar fx:id="importProgress" layoutX="15.0" layoutY="132.0" prefHeight="18.0" prefWidth="181.0"
-                     progress="0.0" AnchorPane.leftAnchor="14.0"/>
+    <AnchorPane fx:id="importPane" layoutX="325.0" layoutY="25.0" prefHeight="166.0" prefWidth="296.0" style="-fx-border-color: #888888; -fx-border-radius: 5px;">
+        <ProgressBar fx:id="importProgress" layoutX="15.0" layoutY="132.0" prefHeight="18.0" prefWidth="181.0" progress="0.0" AnchorPane.leftAnchor="14.0" />
         <VBox layoutX="11.0" layoutY="10.0" prefWidth="256.0" spacing="5.0">
-            <RadioButton fx:id="importWallItems" mnemonicParsing="false" text="Import wall items" disable="true"/>
-            <RadioButton fx:id="importFloorItems" mnemonicParsing="false" text="Import floor items" disable="true"/>
-            <RadioButton fx:id="importFloorplan" layoutX="10.0" layoutY="10.0" mnemonicParsing="false"
-                         text="Import floorplan (requires BC membership)" disable="true"/>
+            <RadioButton fx:id="importWallItems" disable="true" mnemonicParsing="false" text="Import wall items" />
+            <RadioButton fx:id="importFloorItems" disable="true" mnemonicParsing="false" text="Import floor items" />
+            <RadioButton fx:id="importFloorplan" disable="true" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="Import floorplan (requires BC membership)" />
         </VBox>
-        <Button fx:id="importButton" layoutX="209.0" layoutY="128.0" mnemonicParsing="false" prefWidth="75.0"
-                text="Import" onAction="#startImport" disable="true"/>
+        <Button fx:id="importButton" disable="true" layoutX="209.0" layoutY="128.0" mnemonicParsing="false" onAction="#startImport" prefWidth="75.0" text="Import" />
         <VBox layoutX="148.0" layoutY="10.0" prefWidth="144.0" spacing="5.0">
-            <RadioButton fx:id="importRoomSettings" mnemonicParsing="false" text="Import roomsettings" disable="true"/>
-            <RadioButton fx:id="importWiredSettings" layoutX="10.0" layoutY="32.0" mnemonicParsing="false"
-                         text="Import wired settings" disable="true"/>
+            <RadioButton fx:id="importRoomSettings" disable="true" mnemonicParsing="false" text="Import roomsettings" />
         </VBox>
-        <TextField fx:id="importPath" layoutX="11.0" layoutY="90.0" prefHeight="25.0" prefWidth="189.0" editable="false"/>
-        <Button fx:id="chooseFileButton" layoutX="209.0" layoutY="90.0" mnemonicParsing="false"
-                onAction="#onSelectImportFileButton" text="Choose file"/>
+        <TextField fx:id="importPath" editable="false" layoutX="11.0" layoutY="90.0" prefHeight="25.0" prefWidth="189.0" />
+        <Button fx:id="chooseFileButton" layoutX="209.0" layoutY="90.0" mnemonicParsing="false" onAction="#onSelectImportFileButton" text="Choose file" />
     </AnchorPane>
     <Label layoutX="325.0" layoutY="8.0" text="  Import">
         <font>
-            <Font name="System Italic" size="12.0"/>
+            <Font name="System Italic" size="12.0" />
         </font>
     </Label>
-    <AnchorPane fx:id="logPane"
-                layoutX="15.0" layoutY="216.0" prefHeight="131.0" prefWidth="607.0"
-                style="-fx-border-color: #888888; -fx-border-radius: 5px;" >
+    <AnchorPane fx:id="logPane" layoutX="15.0" layoutY="216.0" prefHeight="131.0" prefWidth="607.0" style="-fx-border-color: #888888; -fx-border-radius: 5px;">
         <VBox alignment="CENTER" layoutX="511.0" layoutY="4.0" prefHeight="123.0" prefWidth="82.0" spacing="10.0">
-            <Button fx:id="clearLogButton" alignment="CENTER" contentDisplay="CENTER" layoutX="12.0"
-                    layoutY="39.0" mnemonicParsing="false" onAction="#clearLog" prefWidth="82.0" text="Clear"/>
+            <Button fx:id="clearLogButton" alignment="CENTER" contentDisplay="CENTER" layoutX="12.0" layoutY="39.0" mnemonicParsing="false" onAction="#clearLog" prefWidth="82.0" text="Clear" />
         </VBox>
-        <ScrollPane fx:id="logScroll" hbarPolicy="NEVER" layoutX="14.0" layoutY="17.0" pannable="true"
-                    prefHeight="96.0" prefWidth="489.0"
-                    style="-fx-border-color: #888888; -fx-border-radius: 5px; -fx-background: #000000;"
-                    vvalue="1.0">
-            <TextFlow fx:id="txt_logField"/>
+        <ScrollPane fx:id="logScroll" hbarPolicy="NEVER" layoutX="14.0" layoutY="17.0" pannable="true" prefHeight="96.0" prefWidth="489.0" style="-fx-border-color: #888888; -fx-border-radius: 5px; -fx-background: #000000;" vvalue="1.0">
+            <TextFlow fx:id="txt_logField" />
             <padding>
-                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </padding>
         </ScrollPane>
     </AnchorPane>    <Label layoutX="15.0" layoutY="199.0" text="  Log">
     <font>
-        <Font name="System Italic" size="12.0"/>
+        <Font name="System Italic" size="12.0" />
     </font>
 </Label>
 </AnchorPane>

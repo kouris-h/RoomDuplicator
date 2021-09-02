@@ -5,10 +5,12 @@ import furnidata.FurniDataSearcher;
 import gearth.extensions.parsers.HWallItem;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
+import javafx.scene.paint.Color;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import parsers.Inventory;
 import utils.Executor;
+import utils.Logger;
 import utils.Utils;
 
 import java.util.ArrayList;
@@ -108,17 +110,15 @@ public class WallItems extends Exportable {
                         tries++;
                     }
                 } else {
-                    System.out.println("Failed to place " + classname);
-                    // TODO log
+                    Logger.log(Color.ORANGE, "Failed to place " + this.classname);
                 }
 
                 inventory.removeItemById(usedItem.getItemID());
             } else {
-                // TODO log item not found
-                System.out.println(this.classname + " skipped");
+                Logger.log(Color.RED, this.classname + " not found, skipped!");
             }
 
-            progressListener.setProgress((double) currentWallItems.wallItems.size() / wallItems.size());
+            progressListener.setProgress((double) (currentWallItems.wallItems.size() + 1) / wallItems.size());
         }
     }
 }
